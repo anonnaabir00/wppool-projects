@@ -22,7 +22,7 @@ jQuery(document).ready(function($) {
                 var image_url = attachment.sizes.thumbnail.url;
                 var image_id = attachment.id;
 
-                var imageHTML = '<li><img class="project-image" src="' + image_url + '" alt="Gallery Image">';
+                var imageHTML = '<li class="mr-8 mb-8"><img class="project-image" src="' + image_url + '" alt="Gallery Image">';
                 imageHTML += '<input type="hidden" name="gallery_images[]" value="' + image_id + '">';
                 imageHTML += '<span class="remove-image">Remove</span></li>';
 
