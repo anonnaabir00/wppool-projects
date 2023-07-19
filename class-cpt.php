@@ -16,9 +16,13 @@
             // add custom post type
             add_action( 'init', array( $this, 'wppool_projects_cpt' ) );
             add_action( 'init', array( $this, 'wppool_projects_taxonomy' ) );
+            add_filter( 'template_include', array( $this, 'wppool_projects_single_view' ) );
+            add_filter( 'template_include', array( $this, 'wppool_projects_archive_view' ) );
             add_action( 'admin_enqueue_scripts', array($this,'wppool_admin_assets'));
+            add_filter( 'script_loader_tag', array( $this,'add_module_attribute'), 10,3 );
             add_action( 'add_meta_boxes', array($this,'wppool_projects_meta_box'));
             add_action( 'save_post_wppool_projects', array($this,'wppool_projects_meta_save'));
+            add_shortcode( 'wppool_projects', array($this,'wppool_projects_shortcode_handler'));
         }
 
         public function wppool_projects_cpt() {
@@ -88,6 +92,28 @@
             register_taxonomy('project_category', 'wppool_projects', $args);
         }
 
+        public function wppool_projects_single_view($template) {
+            if (is_singular('wppool_projects')) {
+                // Check if a custom template exists in the plugin
+                $custom_template = plugin_dir_path(__FILE__) . 'templates/single-wppool_projects.php';
+                if (file_exists($custom_template)) {
+                    return $custom_template;
+                }
+            }
+            return $template;
+        }
+
+        public function wppool_projects_archive_view($template) {
+            if (is_post_type_archive('wppool_projects')) {
+                // Check if a custom template exists in the plugin
+                $custom_template = plugin_dir_path(__FILE__) . 'templates/archive-wppool_projects.php';
+                if (file_exists($custom_template)) {
+                    return $custom_template;
+                }
+            }
+            return $template;
+        }
+
         public function wppool_admin_assets($hook){
             global $post_type;
 
@@ -132,14 +158,11 @@
         public function render_wppool_projects_meta_box($post) {
             // Retrieve existing field values
             $custom_field_value = get_post_meta($post->ID, 'custom_field_name', true);
-            $gallery_images = $custom_field_value['gallery_images'];
-            // echo "<pre>";
-            // foreach ($gallery_images as $image_id) {
-            //     $image_url = wp_get_attachment_image_url($image_id, 'full');
-            //     echo $image_url . '<br>'; // Output the image URL
-            // }    
-            // // var_dump(wp_get_attachment_image_url($custom_field_value['gallery_images']));
-            // echo "</pre>";
+            if (is_array($custom_field_value) && isset($custom_field_value['gallery_images'])) {
+                $gallery_images = $custom_field_value['gallery_images'];
+            } else {
+                $gallery_images = array();
+            }
 
             // Display the custom field input
             ?>
@@ -177,7 +200,43 @@
         
                 update_post_meta($post_id, 'custom_field_name', $data);
             }
-        }               
+        }
+        
+        public function wppool_projects_shortcode_handler($atts) {
+            // Query all projects
+            $projects = new WP_Query(array(
+                'post_type' => 'wppool_projects',
+                'posts_per_page' => -1,
+            ));
+        
+            ob_start();
+        
+            if ($projects->have_posts()) {
+                while ($projects->have_posts()) {
+                    $projects->the_post();
+
+                    $custom_field_value = get_post_meta(get_the_ID(), 'custom_field_name', true);
+
+                    $project_data = array(
+                        'title' => get_the_title(),
+                        'content' => get_the_content(),
+                        'custom_field' => $custom_field_value,
+                        'thumbnail' => get_the_post_thumbnail_url(get_the_ID()),
+                        // get thumbnail image
+
+                    );
+
+                    // Include the template file and pass project data as variables
+                    include(plugin_dir_path(__FILE__) . 'templates/wppool_projects.php');
+                }
+            } else {
+                echo 'No projects found.';
+            }        
+        
+            wp_reset_postdata();
+        
+            return ob_get_clean();
+        }
 
     }
 
