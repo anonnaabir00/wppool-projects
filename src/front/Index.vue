@@ -1,22 +1,18 @@
 <template>
     <div>
-      <div>
+      <div class="flex justify-end">
         <!-- Category filter -->
-        <label for="category">Category:</label>
-        <select id="category" v-model="selectedCategory" @change="filterProjects">
-          <option value="">All</option>
-          <option v-for="category in categories" :value="category.slug" :key="category.id">{{ category.name }}</option>
-        </select>
+        <Dropdown v-model="selectedCategory" :options="categories" optionLabel="name" placeholder="Project Category" @change="filterProjects" />
       </div>
 
       <!-- Project list -->
-      <ul class="grid grid-cols-3 gap-6">
+      <ul class="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
       <li class="mt-6 border border-solid border-gray-100 shadow-lg" v-for="project in filteredProjects" :key="project.title">
         <div @click="openModal(project.id)" class="cursor-pointer no-underline text-left w-full h-full p-0 border-gray-100">
           <div class="h-64 relative">
             <img :src="project.thumbnail" class="w-full h-full p-0 object-cover" alt="" />
             <div class="project-title absolute top-0 right-0 bottom-0 left-0 flex items-center justify-center text-white text-center bg-black bg-opacity-75 transition-opacity opacity-0">
-              <p class="text-xl font-bold">{{ project.title }}</p>
+              <p class="text-2xl font-light leading-relaxed" v-html="project.title"></p>
             </div>
           </div>
         </div>
@@ -24,37 +20,34 @@
     </ul>
   
       <!-- Pagination -->
-      <div class="mt-8">
-        <button @click="previousPage" :disabled="currentPage === 1">Previous</button>
-        <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+      <div class="mt-6 flex justify-center">
+        <button @click="previousPage" :disabled="currentPage === 1" class="bg-black text-white pl-3 pr-3 p-2 m-4">Previous</button>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="bg-black text-white pl-3 pr-3 p-2 m-4">Next</button>
       </div>
-  
-      <!-- Modal -->
-      <div v-if="selectedProject" class="fixed inset-0 flex items-center justify-center z-50 content-center space-x-4 overflow-auto">
-        <div class="fixed inset-0 bg-black opacity-75"></div>
-        <div class="sm:block md:flex relative bg-white rounded-lg shadow-lg max-w-4xl mx-auto">
-            <!-- Modal content -->
-            <FsLightbox :toggler="toggler" :sources="selectedProject.gallery" :slide="slide" />
-            <div class="bg-gray-100">
-              <div class="h-64">
-              <img :src="selectedProject.thumbnail" class="w-full h-full p-0 object-cover" alt="" />
+
+      <div v-if="selectedProject">
+        <Sidebar :visible.sync="displayModal" header="Header" position="full" showCloseIcon="true">
+          <div class="flex justify-center">
+            <div class="sm:w-full md:w-3/6">
+              <div class="sm:block md:flex justify-between items-center mt-6 mb-6">
+                <h2 class="text-3xl mt-3">{{ selectedProject.title }}</h2>
+                <div class="sm:mt-8 md:mt-4 sm:mb-8 md:mb-4">
+                  <a :href="selectedProject.external_url" target="_blank"  class="bg-pink-500 p-3 text-white hover:text-white">View On Dribbble</a>
+                </div>
+              </div>
+              <img :src="selectedProject.thumbnail" class="w-full p-0 mb-5" alt="" />
+              <h3 class="text-2xl mt-6 mb-6">Project Description</h3>
+              <div v-html="selectedProject.content" class="font-light leading-relaxed" ></div>
+              <h3 class="text-2xl mt-6 mb-6">Project Images</h3>
+              <Carousel :value="selectedProject.gallery">
+              <template #item="slotProps">
+                <img :src=slotProps.data class="cursor-pointer w-full h-96 object-contain" alt="" />
+            </template>
+          </Carousel>
             </div>
-                <ul class="grid grid-cols-2 gap-2 my-0 p-0">
-                    <li class="" v-for="gallery in selectedProject.gallery">
-                    <img @click=OpenLightbox(number) :src=gallery class="cursor-pointer w-full sm:h-48 md:h-72 object-cover" alt="" />
-                </li>
-                </ul>
-            </div>
-            <div class="pt-6 pl-8 pr-24">
-                <h3 class="text-2xl font-semibold mb-4">{{ selectedProject.title }}</h3>
-                <p class="text-base leading-relaxed mb-8">{{ selectedProject.custom_field.description }}</p>
-            <div class="mt-4 flex justify-end">
-            <button @click="closeModal" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Close</button>
-            </div>
-            </div>
-        </div>
-        </div>
-        <!-- Modal End -->
+          </div>
+        </Sidebar>      
+    </div>
 
       </div>
   </template>
@@ -62,9 +55,20 @@
   <script>
   import Vue from 'vue';
   import axios from 'axios';
-  import 'animate.css';
-  import 'flowbite';
-  import FsLightbox from "fslightbox-vue";
+
+  import Button from 'primevue/button';
+  import Dialog from 'primevue/dialog';
+  import Carousel from 'primevue/carousel';
+  import Sidebar from 'primevue/sidebar';
+  import Dropdown from 'primevue/dropdown';
+  import MultiSelect from 'primevue/multiselect';
+  
+  Vue.component('Dialog', Dialog);
+  Vue.component('Button', Button);
+  Vue.component('Carousel', Carousel);
+  Vue.component('Sidebar', Sidebar);
+  Vue.component('Dropdown', Dropdown);
+  Vue.component('MultiSelect', MultiSelect);
 
   export default {
     name: 'Index',
@@ -78,10 +82,10 @@
         totalPages: 0,
         selectedProject: null,
         toggler: false,
-        slide: 2
+        slide: 2,
+        displayModal: false,
       };
     },
-    components: { FsLightbox },
     methods: {
       loadProjects(page) {
         const url = `/wp-json/wppool/v1/projects?page=${page}${this.selectedCategory ? '&category=' + this.selectedCategory : ''}`;
@@ -114,8 +118,9 @@
         this.currentPage = 1; // Reset the current page when filtering
       },
       filterByCategory(projects) {
+        console.log(this.selectedCategory)
         if (this.selectedCategory) {
-          return projects.filter((project) => project.categories.includes(this.selectedCategory));
+          return projects.filter((project) => project.categories.includes(this.selectedCategory.slug));
         }
         return projects;
       },
@@ -136,6 +141,7 @@
           .get(`/wp-json/wppool/v1/projects/${projectId}`)
           .then((response) => {
             this.selectedProject = response.data;
+            this.displayModal = true;
             console.log(this.selectedProject);
           })
           .catch((error) => {
@@ -144,11 +150,12 @@
       },
       closeModal() {
         this.selectedProject = null;
+        this.displayModal = false;
       },
       OpenLightbox(number) {
         this.slide = number;
 				this.toggler = !this.toggler;
-    }
+    },
     },
     mounted() {
       this.loadProjects(this.currentPage);

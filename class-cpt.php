@@ -16,8 +16,6 @@
             // add custom post type
             add_action( 'init', array( $this, 'wppool_projects_cpt' ) );
             add_action( 'init', array( $this, 'wppool_projects_taxonomy' ) );
-            add_filter( 'template_include', array( $this, 'wppool_projects_single_view' ) );
-            add_filter( 'template_include', array( $this, 'wppool_projects_archive_view' ) );
             add_action( 'admin_enqueue_scripts', array($this,'wppool_admin_assets'));
             add_filter( 'script_loader_tag', array( $this,'add_module_attribute'), 10,3 );
             add_action( 'add_meta_boxes', array($this,'wppool_projects_meta_box'));
@@ -52,7 +50,7 @@
                     'capability_type' => 'post',
                     'hierarchical' => false,
                     'rewrite' => array('slug' => 'wppool-projects'),
-                    'supports' => array( 'title', 'thumbnail'),
+                    'supports' => array( 'title', 'editor','thumbnail'),
                     'show_in_rest' => true,
                     'menu_position' => 5,
                     'menu_icon' => 'dashicons-location',
@@ -92,28 +90,6 @@
             register_taxonomy('project_category', 'wppool_projects', $args);
         }
 
-        public function wppool_projects_single_view($template) {
-            if (is_singular('wppool_projects')) {
-                // Check if a custom template exists in the plugin
-                $custom_template = plugin_dir_path(__FILE__) . 'templates/single-wppool_projects.php';
-                if (file_exists($custom_template)) {
-                    return $custom_template;
-                }
-            }
-            return $template;
-        }
-
-        public function wppool_projects_archive_view($template) {
-            if (is_post_type_archive('wppool_projects')) {
-                // Check if a custom template exists in the plugin
-                $custom_template = plugin_dir_path(__FILE__) . 'templates/archive-wppool_projects.php';
-                if (file_exists($custom_template)) {
-                    return $custom_template;
-                }
-            }
-            return $template;
-        }
-
         public function wppool_admin_assets($hook){
             global $post_type;
 
@@ -121,7 +97,7 @@
                 // Check if the current post type is 'wppool_projects'
                 if ($post_type === 'wppool_projects') {
                     $post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
-                    $options = get_post_meta($post_id, 'custom_field_name', true);
+                    $options = get_post_meta($post_id, 'wppool_projects_meta', true);
 
                     wp_enqueue_style( 'app', plugins_url( 'assets/app.css', __FILE__ ) );
                     wp_enqueue_script( 'admin', plugins_url( 'assets/admin.js', __FILE__ ), [], '1.0', true );
@@ -157,7 +133,7 @@
 
         public function render_wppool_projects_meta_box($post) {
             // Retrieve existing field values
-            $custom_field_value = get_post_meta($post->ID, 'custom_field_name', true);
+            $custom_field_value = get_post_meta($post->ID, 'wppool_projects_meta', true);
             if (is_array($custom_field_value) && isset($custom_field_value['gallery_images'])) {
                 $gallery_images = $custom_field_value['gallery_images'];
             } else {
@@ -187,18 +163,16 @@
 
 
         public function wppool_projects_meta_save($post_id) {
-            if (isset($_POST['url']) || isset($_POST['description']) || isset($_POST['gallery_images'])) {
+            if (isset($_POST['url']) || isset($_POST['gallery_images'])) {
                 $url = sanitize_text_field($_POST['url']);
-                $description = sanitize_text_field($_POST['description']);
                 $gallery_images = array_map('absint', $_POST['gallery_images']);
         
                 $data = array(
                     'url' => $url,
-                    'description' => $description,
                     'gallery_images' => $gallery_images
                 );
         
-                update_post_meta($post_id, 'custom_field_name', $data);
+                update_post_meta($post_id, 'wppool_projects_meta', $data);
             }
         }
         
@@ -215,7 +189,7 @@
                 while ($projects->have_posts()) {
                     $projects->the_post();
 
-                    $custom_field_value = get_post_meta(get_the_ID(), 'custom_field_name', true);
+                    $custom_field_value = get_post_meta(get_the_ID(), 'wppool_projects_meta', true);
 
                     $project_data = array(
                         'title' => get_the_title(),
@@ -226,8 +200,7 @@
 
                     );
 
-                    // Include the template file and pass project data as variables
-                    include(plugin_dir_path(__FILE__) . 'templates/wppool_projects.php');
+                    echo '<div id="wppool-projects"></div>';
                 }
             } else {
                 echo 'No projects found.';

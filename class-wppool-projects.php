@@ -32,6 +32,8 @@
 
                 public function wppool_projects_assets() {
                     wp_enqueue_style( 'app', plugin_dir_url( __FILE__ ) . 'assets/app.css', array(), '1.0', 'all' );
+                    wp_enqueue_style('prime-icons', 'https://cdnjs.cloudflare.com/ajax/libs/primeicons/4.0.0/primeicons.min.css');
+                    wp_enqueue_style( 'main', plugin_dir_url( __FILE__ ) . 'assets/main.css', array(), '1.0', 'all' );
                     wp_enqueue_script( 'main', plugin_dir_url( __FILE__ ) . 'assets/main.js', array(), '1.0', true );
                 }
 
@@ -91,7 +93,7 @@
                         while ($projects->have_posts()) {
                             $projects->the_post();
                 
-                            $custom_field_value = get_post_meta(get_the_ID(), 'custom_field_name', true);
+                            $custom_field_value = get_post_meta(get_the_ID(), 'wppool_projects_meta', true);
                 
                             $project_data[] = array(
                                 'id' => get_the_ID(),
@@ -127,7 +129,7 @@
                         return new WP_Error('invalid_project', 'Invalid project ID.', array('status' => 404));
                     }
                 
-                    $custom_field_value = get_post_meta($project_id, 'custom_field_name', true);
+                    $custom_field_value = get_post_meta($project_id, 'wppool_projects_meta', true);
 
                     $gallery_images = array();
                     foreach ($custom_field_value['gallery_images'] as $image_id) {
@@ -139,9 +141,10 @@
                 
                     $project_data = array(
                         'title' => $project->post_title,
-                        'descritpion' => $custom_field_value['description'],
+                        'content' => $project->post_content,
                         'gallery' => $gallery_images,
                         'custom_field' => $custom_field_value,
+                        'external_url' => $custom_field_value['url'],
                         'thumbnail' => get_the_post_thumbnail_url($project_id),
                         'categories' => wp_get_post_terms($project_id, 'project_category', array('fields' => 'slugs')), // Replace 'project_category' with your actual taxonomy slug
                     );

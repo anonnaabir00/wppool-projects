@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import App from './App.vue';
 
-// console.log(admin_settings.options);
-
 jQuery(document).ready(function($) {
     // Add Image button click
     $('#add-gallery-image').on('click', function() {

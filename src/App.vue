@@ -1,9 +1,5 @@
 <template>
     <div class="mt-6 mb-6 bg-white">
-        <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Project Description</label>
-        <textarea v-model="description" id="description" name="description" rows="4" cols="50" class="p-2 shadow appearance-none border rounded w-3/6 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-        </div>
         
         <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="url">External URL</label>
@@ -12,7 +8,7 @@
 
         <div>
             <label class="block text-gray-700 text-sm font-bold mb-2" for="images">Project Images</label>
-        <input type="button" id="add-gallery-image" class="bg-black text-white pl-6 pr-6 p-3" value="Add Image">
+        <input type="button" id="add-gallery-image" class="cursor-pointer bg-black text-white pl-6 pr-6 p-3" value="Add Image">
         </div>
             
     </div>
