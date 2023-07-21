@@ -5,6 +5,18 @@
         <Dropdown v-model="selectedCategory" :options="categories" optionLabel="name" placeholder="Project Category" @change="filterProjects" />
       </div>
 
+      <ul v-if="loading" class="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
+        <li class="mt-6 border border-solid border-gray-100 shadow-lg">
+          <Skeleton width="100%" height="16rem" />
+        </li>
+        <li class="mt-6 border border-solid border-gray-100 shadow-lg">
+          <Skeleton width="100%" height="16rem" />
+        </li>
+        <li class="mt-6 border border-solid border-gray-100 shadow-lg">
+          <Skeleton width="100%" height="16rem" />
+        </li>
+      </ul>
+
       <!-- Project list -->
       <ul class="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
       <li class="mt-6 border border-solid border-gray-100 shadow-lg" v-for="project in filteredProjects" :key="project.title">
@@ -25,6 +37,54 @@
         <button @click="nextPage" :disabled="currentPage === totalPages" class="bg-black text-white pl-3 pr-3 p-2 m-4">Next</button>
       </div>
 
+        <Sidebar :visible.sync="displayModal" header="Header" position="full" showCloseIcon="true">
+          <div v-if="singleloading">
+            <div class="flex justify-center">
+                <div class="sm:w-full md:w-3/6">
+                  <div class="sm:block md:flex justify-between items-center mt-6 mb-6">
+                    <Skeleton width="100%" height="2rem" />
+                    <div class="sm:mt-8 md:mt-4 sm:mb-8 md:mb-0">
+                      <Skeleton width="100%" height="2rem" />
+                    </div>
+                  </div>
+                  <Skeleton width="100%" height="20rem" />
+                </div>
+              </div> 
+          </div>
+
+          <div v-if="selectedProject">
+              <div class="flex justify-center">
+                <div class="sm:w-full md:w-3/6">
+                  <div class="sm:block md:flex justify-between items-center mt-6 mb-6">
+                    <h2 class="text-3xl mt-3">{{ selectedProject.title }}</h2>
+                    <div class="sm:mt-8 md:mt-4 sm:mb-8 md:mb-0">
+                      <a :href="selectedProject.external_url" target="_blank"  class="bg-pink-500 p-3 text-white hover:text-white">View On Dribbble</a>
+                    </div>
+                  </div>
+                  <img :src="selectedProject.thumbnail" class="w-full p-0 mb-5" alt="" />
+                  <div class="flex justify-between mt-8 mb-8">
+                    <p class="text-base font-bold">Project Cateogry: </p>
+                    <ul class="flex">
+                      <li v-for="category in selectedProject.categories">
+                        <Tag :value="category" class="mr-2"></Tag>
+                      </li>
+                    </ul>
+                  </div>
+                  <h3 class="text-2xl mt-6 mb-6">Project Description</h3>
+                  <div v-html="selectedProject.content" class="font-light leading-relaxed" ></div>
+                  <h3 class="text-2xl mt-6 mb-6">Project Images</h3>
+                  <Carousel :value="selectedProject.gallery">
+                  <template #item="slotProps">
+                    <img :src=slotProps.data class="cursor-pointer w-full h-96 object-contain" alt="" />
+                </template>
+              </Carousel>
+                </div>
+              </div>    
+        </div>
+
+        </Sidebar>
+
+      <!--
       <div v-if="selectedProject">
         <Sidebar :visible.sync="displayModal" header="Header" position="full" showCloseIcon="true">
           <div class="flex justify-center">
@@ -56,6 +116,7 @@
           </div>
         </Sidebar>      
     </div>
+    -->
 
       </div>
   </template>
@@ -71,6 +132,7 @@
   import Dropdown from 'primevue/dropdown';
   import MultiSelect from 'primevue/multiselect';
   import Tag from 'primevue/tag';
+  import Skeleton from 'primevue/skeleton';
   
   Vue.component('Dialog', Dialog);
   Vue.component('Button', Button);
@@ -79,6 +141,7 @@
   Vue.component('Dropdown', Dropdown);
   Vue.component('MultiSelect', MultiSelect);
   Vue.component('Tag', Tag);
+  Vue.component('Skeleton', Skeleton);
 
   export default {
     name: 'Index',
@@ -94,10 +157,14 @@
         toggler: false,
         slide: 2,
         displayModal: false,
+        loading: false,
+        singleloading: false,
       };
     },
     methods: {
       loadProjects(page) {
+        this.loading = true;
+
         const url = `/wp-json/wppool/v1/projects?page=${page}${this.selectedCategory ? '&category=' + this.selectedCategory : ''}`;
   
         axios
@@ -110,9 +177,13 @@
           })
           .catch((error) => {
             console.log(error);
+          }).finally(() => {
+            this.loading = false;
           });
       },
       loadCategories() {
+        this.loading = true;
+
         axios
           .get('/wp-json/wppool/v1/categories')
           .then((response) => {
@@ -121,6 +192,8 @@
           })
           .catch((error) => {
             console.log(error);
+          }).finally(() => {
+            this.loading = false;
           });
       },
       filterProjects() {
@@ -147,15 +220,19 @@
         }
       },
       openModal(projectId) {
+        this.selectedProject = null;
+        this.singleloading = true;
+        this.displayModal = true;
         axios
           .get(`/wp-json/wppool/v1/projects/${projectId}`)
           .then((response) => {
             this.selectedProject = response.data;
-            this.displayModal = true;
             // console.log(this.selectedProject);
           })
           .catch((error) => {
             console.log(error);
+          }).finally(() => {
+            this.singleloading = false;
           });
       },
       closeModal() {

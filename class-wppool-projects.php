@@ -4,7 +4,7 @@
  * Plugin Name:       WPPool Projects
  * Plugin URI:        https://wppool.dev/
  * Description:       WPPool Test Porject
- * Version:           1.1
+ * Version:           1.2
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Asaduzzaman Abir
@@ -29,10 +29,10 @@
                 }
 
                 public function wppool_projects_assets() {
-                    wp_enqueue_style( 'app', plugin_dir_url( __FILE__ ) . 'assets/app.css', array(), '1.0', 'all' );
+                    wp_enqueue_style( 'app', plugin_dir_url( __FILE__ ) . 'assets/app.css', array(), '2.0', 'all' );
                     wp_enqueue_style('prime-icons', 'https://cdnjs.cloudflare.com/ajax/libs/primeicons/4.0.0/primeicons.min.css');
                     wp_enqueue_style( 'main', plugin_dir_url( __FILE__ ) . 'assets/main.css', array(), '1.0', 'all' );
-                    wp_enqueue_script( 'main', plugin_dir_url( __FILE__ ) . 'assets/main.js', array(), '1.0', true );
+                    wp_enqueue_script( 'main', plugin_dir_url( __FILE__ ) . 'assets/main.js', array(), '2.0', true );
                 }
 
                 public function add_module_attribute($tag, $handle, $src) {
