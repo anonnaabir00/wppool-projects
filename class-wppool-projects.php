@@ -4,7 +4,7 @@
  * Plugin Name:       WPPool Projects
  * Plugin URI:        https://wppool.dev/
  * Description:       WPPool Test Porject
- * Version:           1.0
+ * Version:           1.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Asaduzzaman Abir
@@ -26,8 +26,6 @@
                     add_action( 'wp_enqueue_scripts', array($this,'wppool_projects_assets'), 10, 1);
                     add_filter( 'script_loader_tag', array( $this,'add_module_attribute'), 10,3 );
                     add_action( 'rest_api_init', array( $this, 'wppool_projects' ));
-
-                    require_once( plugin_dir_path( __FILE__ ) . 'elementor/widgets.php' );
                 }
 
                 public function wppool_projects_assets() {
@@ -176,6 +174,6 @@
 
             }
 
-            $page_harvester = new WPPool_Projects();
+            $wppool_projects = new WPPool_Projects();
             
         }

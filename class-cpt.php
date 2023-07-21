@@ -13,7 +13,6 @@
         }
 
         public function __construct(){
-            // add custom post type
             add_action( 'init', array( $this, 'wppool_projects_cpt' ) );
             add_action( 'init', array( $this, 'wppool_projects_taxonomy' ) );
             add_action( 'admin_enqueue_scripts', array($this,'wppool_admin_assets'));
@@ -24,7 +23,6 @@
         }
 
         public function wppool_projects_cpt() {
-            // create projects custom post type
             register_post_type( 'wppool_projects',
                 array(
                     'labels' => array(
@@ -79,12 +77,12 @@
             );
         
             $args = array(
-                'hierarchical'      => true, // Set this to false if you want non-hierarchical categories like tags
+                'hierarchical'      => true,
                 'labels'            => $labels,
                 'show_ui'           => true,
                 'show_admin_column' => true,
                 'query_var'         => true,
-                'rewrite'           => array('slug' => 'project-category'), // Change the slug to your desired URL structure
+                'rewrite'           => array('slug' => 'project-category'),
             );
         
             register_taxonomy('project_category', 'wppool_projects', $args);
@@ -196,8 +194,6 @@
                         'content' => get_the_content(),
                         'custom_field' => $custom_field_value,
                         'thumbnail' => get_the_post_thumbnail_url(get_the_ID()),
-                        // get thumbnail image
-
                     );
 
                     echo '<div id="wppool-projects"></div>';

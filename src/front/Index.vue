@@ -31,11 +31,19 @@
             <div class="sm:w-full md:w-3/6">
               <div class="sm:block md:flex justify-between items-center mt-6 mb-6">
                 <h2 class="text-3xl mt-3">{{ selectedProject.title }}</h2>
-                <div class="sm:mt-8 md:mt-4 sm:mb-8 md:mb-4">
+                <div class="sm:mt-8 md:mt-4 sm:mb-8 md:mb-0">
                   <a :href="selectedProject.external_url" target="_blank"  class="bg-pink-500 p-3 text-white hover:text-white">View On Dribbble</a>
                 </div>
               </div>
               <img :src="selectedProject.thumbnail" class="w-full p-0 mb-5" alt="" />
+              <div class="flex justify-between mt-8 mb-8">
+                <p class="text-base font-bold">Project Cateogry: </p>
+                <ul class="flex">
+                  <li v-for="category in selectedProject.categories">
+                    <Tag :value="category" class="mr-2"></Tag>
+                  </li>
+                </ul>
+              </div>
               <h3 class="text-2xl mt-6 mb-6">Project Description</h3>
               <div v-html="selectedProject.content" class="font-light leading-relaxed" ></div>
               <h3 class="text-2xl mt-6 mb-6">Project Images</h3>
@@ -62,6 +70,7 @@
   import Sidebar from 'primevue/sidebar';
   import Dropdown from 'primevue/dropdown';
   import MultiSelect from 'primevue/multiselect';
+  import Tag from 'primevue/tag';
   
   Vue.component('Dialog', Dialog);
   Vue.component('Button', Button);
@@ -69,6 +78,7 @@
   Vue.component('Sidebar', Sidebar);
   Vue.component('Dropdown', Dropdown);
   Vue.component('MultiSelect', MultiSelect);
+  Vue.component('Tag', Tag);
 
   export default {
     name: 'Index',
@@ -96,7 +106,7 @@
             this.projects = response.data.projects;
             this.totalPages = response.data.total_pages;
             this.filteredProjects = this.filterByCategory(this.projects);
-            console.log(response.data);
+            // console.log(response.data);
           })
           .catch((error) => {
             console.log(error);
@@ -106,7 +116,7 @@
         axios
           .get('/wp-json/wppool/v1/categories')
           .then((response) => {
-            console.log(response.data);
+            // console.log(response.data);
             this.categories = response.data;
           })
           .catch((error) => {
@@ -118,7 +128,7 @@
         this.currentPage = 1; // Reset the current page when filtering
       },
       filterByCategory(projects) {
-        console.log(this.selectedCategory)
+        // console.log(this.selectedCategory)
         if (this.selectedCategory) {
           return projects.filter((project) => project.categories.includes(this.selectedCategory.slug));
         }
@@ -142,7 +152,7 @@
           .then((response) => {
             this.selectedProject = response.data;
             this.displayModal = true;
-            console.log(this.selectedProject);
+            // console.log(this.selectedProject);
           })
           .catch((error) => {
             console.log(error);
